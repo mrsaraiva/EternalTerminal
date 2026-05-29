@@ -21,6 +21,7 @@ class PseudoTerminalConsole : public Console {
     GetConsoleMode(hstdin, &inputMode);
     auto hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
     GetConsoleMode(hstdout, &outputMode);
+    outputCodePage = GetConsoleOutputCP();
 #else
     termios terminal_local;
     tcgetattr(0, &terminal_local);
@@ -40,6 +41,7 @@ class PseudoTerminalConsole : public Console {
                                 ENABLE_WRAP_AT_EOL_OUTPUT |
                                 ENABLE_VIRTUAL_TERMINAL_PROCESSING |
                                 DISABLE_NEWLINE_AUTO_RETURN);
+    SetConsoleOutputCP(CP_UTF8);
     // DISABLE_NEWLINE_AUTO_RETURN is needed to keep full-screen terminal apps
     // like tmux from scrolling incorrectly, but some Windows terminal hosts can
     // leave long interactive input repainting over one visual row after this
@@ -61,6 +63,7 @@ class PseudoTerminalConsole : public Console {
     SetConsoleMode(hstdin, inputMode);
     auto hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleMode(hstdout, outputMode);
+    SetConsoleOutputCP(outputCodePage);
 #else
     tcsetattr(0, TCSANOW, &terminal_backup);
 #endif
@@ -116,6 +119,8 @@ class PseudoTerminalConsole : public Console {
   DWORD inputMode;
   /** @brief Saved console output mode for restoration. */
   DWORD outputMode;
+  /** @brief Saved console output code page for restoration. */
+  UINT outputCodePage;
 #else
   /** @brief Backup of the terminal's `termios` state for teardown. */
   termios terminal_backup;
