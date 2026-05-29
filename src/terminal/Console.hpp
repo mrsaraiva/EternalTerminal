@@ -23,17 +23,14 @@ class Console {
   virtual int getFd() = 0;
 
   /**
-   * @brief Writes UTF-8 to the console using either Windows console APIs or raw
-   * fd.
+   * @brief Writes terminal bytes to the console.
    */
   virtual void write(const string& s) {
 #ifdef WIN32
-    std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    std::wstring wide = converter.from_bytes(s);
-
     auto hstdout = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD numWritten;
-    WriteConsole(hstdout, wide.c_str(), wide.length(), &numWritten, NULL);
+    WriteFile(hstdout, s.data(), static_cast<DWORD>(s.length()), &numWritten,
+              NULL);
 #else
     RawSocketUtils::writeAll(getFd(), &s[0], s.length());
 #endif
